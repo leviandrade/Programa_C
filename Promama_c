@@ -1,0 +1,324 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+char arquivo(char frase[41]);				//Esta função separa o que foi digitado pelo usuário.
+char invert(char nome[21]); 				//Esta função cria um arquivo com caracteres invertidos aos dos caracteres do arquivo de entrada.
+char cript(char nome[21], char chave[21]);	//Esta função cria um arquivo com caracteres criptografados aos dos caracteres do arquivo de entrada.
+char DOS(char nome[21]);					//Esta opção cria um arquivo com '\n' representado por 'CR' e 'LF'.
+char UNIX(char nome[21]);					//Esta opção cria um arquivo com '\n' representado por 'LF'. 
+int main()
+{
+    char nome[41] = "";
+    
+    printf("Digite [FORMARQ] [ESPAÇO] [NOME DO ARQUIVO] [ESPAÇO] a opção desejada\
+    [C], [D], [I] ou [U]. Se a opção escolhida for [C], digite [ESPAÇO] e depois a\
+    [CHAVE/SENHA] para criptografar/descriptografar.\n");
+    
+    arquivo(gets(nome));        
+    
+    return 0;
+}
+
+char arquivo(char frase[41])
+{
+    char formarq[8] = "", nomeArq[20] = "", chave[20] = "", *p;
+    int i, ponto, espaco;
+    
+    //Verifica se frase é maior que limite.
+    if(strlen(frase) > 41)
+	{
+        printf("Erro! Linha de comando ultrapassa limite\n");
+        exit(1);
+	}
+    else
+	{
+    	//Atribui caracteres à formarq.
+    	for(i=0; i<7; i++)
+    		formarq[i] = frase[i];
+		
+		//Converte caracteres para maiúsculo.
+		strupr(formarq);
+		
+		//Verifica se formarq foi digitado corretamente.
+		if(strcmp(formarq, "FORMARQ"))
+			return printf("Erro! Digite formarq corretamente\n");
+		
+        //Verifica o 1° espaço.
+        if(frase[7] != ' ')
+            return printf("Erro! Digite espaço corretamente\n");
+        
+        //Localiza o índice da última ocorrência de ponto.
+        p = strrchr(frase, '.');
+        ponto = p - frase;     
+        espaco = ponto+4;
+        
+        //Atribui o nome do arquivo à variável nomeArq
+        for(i=8; i<ponto+4; i++)
+            nomeArq[i-8] = frase[i];
+            
+        //Verifica a extensão.
+        if(frase[ponto+4] != ' ')
+            return printf("Erro! Extensão não reconhecida\n");
+        
+        //Verifica se foi escolhida a opção de criptografia.       
+        if((frase[espaco+1] == 'c') || (frase[espaco+1] == 'C'))
+		{
+            if(frase[espaco+2] != ' ')
+                return printf("Erro! Digite espaço corretamente\n");
+            
+            //Atribui a chave.
+            for(i=espaco+3; frase[i] != '\0'; i++)
+                chave[(i-(espaco+3))] = frase[i];
+        }
+        else
+		{
+            for(i=(espaco+2); i<strlen(frase); i++)
+                frase[i] = '\0';            
+        }
+        //Verifica a opção de conversão escolhida.
+        switch(frase[espaco+1])
+		{
+            case 'c':
+            case 'C':
+                cript(nomeArq, chave);
+                break;
+            case 'd':
+            case 'D':
+                DOS(nomeArq);
+                break;
+            case 'i':
+            case 'I':
+                invert(nomeArq);
+                break;
+            case 'u':
+            case 'U':
+            	UNIX(nomeArq);
+                break;
+            default: printf("Opção escolhida inválida\n");       
+        }      
+    }
+}
+
+char invert(char nome[31])
+{
+    FILE *entrada, *saida;
+    int i, letra, ponto;
+    char extensao[5] = "", nomeSaida[21] = "", *p;
+    
+    //Localiza o índice da última ocorrência de ponto.
+    p = strrchr(nome, '.');
+    ponto = p - nome;
+    
+    //Atribui o nome do arquivo (sem a extensão) à variável nomeSaida.
+    for(i=0; i<ponto; i++)
+        nomeSaida[i] = nome[i];
+    
+    //Atribui a extensão do arquivo à variável extensão.    
+    for(i=ponto; i<ponto+5; i++)
+        extensao[i-ponto] = nome[i];
+    
+    //Seleção do tipo de invert.
+    if(strcmp(extensao, ".inv"))
+	{
+    	//Testa o valor de retorno dos ponteiros de arquivo.
+        if((entrada = fopen(nome, "r")) == NULL)
+            return printf("Erro ao ler arquivo\n");
+        else if((saida = fopen((strcat(nomeSaida, ".inv")), "w")) == NULL)
+            return printf("Erro ao abrir arquivo\n");
+        else{
+            //Inverte o valor da variável letra.
+            while((letra = fgetc(entrada)) != EOF)
+                fputc(~letra, saida);
+            //Fecha arquivos.
+            fclose(entrada);
+            fclose(saida);
+            }
+        return printf("Arquivo criado com sucesso\n");
+    }
+    else
+	{
+    	//Testa o valor de retorno dos ponteiros de arquivo.
+        if((entrada = fopen(nome, "r")) == NULL)
+            return printf("Erro ao ler arquivo\n");
+        else if((saida = fopen((strcat(nomeSaida, ".dnv")), "w")) == NULL)
+            return printf("Erro ao abrir arquivo\n");
+        else{
+            //Inverte o valor da variável letra.
+            while((letra = fgetc(entrada)) != EOF)
+                fputc(~letra, saida);
+            //Fecha arquivos.
+            fclose(entrada);
+            fclose(saida);
+            }
+        return printf("Arquivo criado com sucesso\n");
+	}
+}
+
+char cript(char nome[21], char chave[21])
+{
+    FILE *entrada, *saida;
+    int i, d, letra, ponto = 0;
+    char extensao[5] = "", nomeSaida[21] = "", *p;
+	
+    //Localiza o índice da última ocorrência de ponto.
+    p = strrchr(nome, '.');
+    ponto = p - nome;
+    
+    //Atribui o nome do arquivo (sem a extensão) à variável nomeSaida.
+    for(i=0; i<ponto; i++)
+        nomeSaida[i] = nome[i];
+    
+    //Atribui a extensão do arquivo à variável extensão. 
+    for(i=ponto; i<ponto+4; i++)
+        extensao[i-ponto] = nome[i];
+    
+    //Seleção do tipo de cript.
+    if(strcmp(extensao, ".crp"))
+	{
+    	//Testa o valor de retorno dos ponteiros de arquivo.
+        if((entrada = fopen(nome, "r")) == NULL)
+            return printf("Erro ao ler arquivo\n");
+        else if((saida = fopen((strcat(nomeSaida, ".crp")), "w")) == NULL)
+            return printf("Erro ao abrir arquivo\n");
+        else
+		{
+            //Criptografa o arquivo com a chave.
+            for(i=0, d=0; (letra = fgetc(entrada)) != EOF ; i++){
+                fputc((letra ^ chave[d]), saida);
+                d++;
+                //Reseta a variável d.
+                if(d == (strlen(chave))-1)
+                     d = -1;
+                     }
+            //Fecha arquivos.
+            fclose(entrada);
+            fclose(saida);
+        }
+        return printf("Arquivo criado com sucesso\n");
+    }  
+    else
+	{
+    	//Testa o valor de retorno dos ponteiros de arquivo.
+        if((entrada = fopen(nome, "r")) == NULL)
+            return printf("Erro ao ler arquivo\n");
+        else if((saida = fopen((strcat(nomeSaida, ".drp")), "w")) == NULL)
+            return printf("Erro ao abrir arquivo\n");
+        else{
+            //Descriptografa o arquivo com a chave.
+            for(i=0, d=0; (letra = fgetc(entrada)) != EOF ; i++)
+			{
+                fputc((chave[d] ^letra), saida);
+                d++;
+                //Reseta a variável d.
+                if(d == (strlen(chave))-1)
+                    d = -1;
+            }
+            //Fecha arquivos.
+            fclose(entrada);
+            fclose(saida);
+            } 
+        return printf("Arquivo criado com sucesso\n");
+    }                    
+}
+
+char DOS(char nome[21])
+{
+    FILE *entrada, *saida;
+    int i, letra, ponto;
+    char extensao[5] = "", nomeSaida[21] = "", *p;
+    
+    //Localiza o índice da última ocorrência de ponto.
+    p = strrchr(nome, '.');
+    ponto = p - nome;
+    
+    //Atribui o nome do arquivo (sem a extensão) à variável nomeSaida.
+    for(i=0; i<ponto; i++)
+        nomeSaida[i] = nome[i];
+    
+    //Atribui a extensão do arquivo à variável extensão. 
+    for(i=ponto; i<ponto+4; i++)
+        extensao[i-ponto] = nome[i];
+    
+    //Verifica se arquivo já é do tipo DOS.
+    if(strcmp(extensao, ".dos"))
+	{
+    	//Testa o valor de retorno dos ponteiros de arquivo.
+		if((entrada = fopen(nome, "rb")) == NULL)
+        	return printf("Erro ao ler arquivo\n");
+    	else if((saida = fopen((strcat(nomeSaida, ".dos")), "wb")) == NULL)
+        	return printf("Erro ao abrir arquivo\n");
+    	else
+		{
+    		//Percorre o arquivo.
+        	while((letra = fgetc(entrada)) != EOF)
+			{
+        		if(letra == 0x0A)
+				{
+        			fputc(0x0D, saida);
+        			fputc(0x0A, saida);
+				}
+				else
+			    	fputc(letra, saida);
+			}
+        //Fecha arquivos.   
+        fclose(entrada);
+        fclose(saida);
+        }
+    	return printf("Arquivo criado com sucesso\n");
+	}
+	else
+	    return printf("Arquivo já está no formato DOS\n");  
+}
+
+char UNIX(char nome[21])
+{
+    FILE *entrada, *saida;
+    int i, letra, ponto, c = 0;
+    char extensao[5] = "", nomeSaida[21] = "", *p;
+    
+    //Localiza o índice da última ocorrência de ponto.
+    p = strrchr(nome, '.');
+    ponto = p - nome;
+    
+    //Atribui o nome do arquivo (sem a extensão) à variável nomeSaida.
+    for(i=0; i<ponto; i++)
+        nomeSaida[i] = nome[i];
+    
+    //Atribui a extensão do arquivo à variável extensão. 
+    for(i=ponto; i<ponto+4; i++)
+        extensao[i-ponto] = nome[i];
+    
+    //Verifica se o arquivo é do tipo UNIX.
+    if(strcmp(extensao, ".unx"))
+	{
+    	//Testa o valor de retorno dos ponteiros de arquivo.
+    	if((entrada = fopen(nome, "rb")) == NULL)
+        	return printf("Erro ao ler arquivo\n");
+    	else if((saida = fopen((strcat(nomeSaida, ".unx")), "wb")) == NULL)
+        	return printf("Erro ao abrir arquivo\n");
+    	else
+		{
+    		//Percorre o arquivo.
+        	while((letra = fgetc(entrada)) != EOF)
+			{
+        		if(letra == 0x0D || letra == 0x0A)
+				{
+        			c++;
+        			if(c == 2)
+        		    	fputc(0x0A, saida);
+				}
+				else
+				{
+					fputc(letra, saida);
+			    	c = 0;
+				}
+			}
+        fclose(entrada);
+        fclose(saida);
+        }
+        return printf("Arquivo criado com sucesso\n");
+	}
+	else
+	    return printf("O arquivo já está no formato UNIX\n");
+}
